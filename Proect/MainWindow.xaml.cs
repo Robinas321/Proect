@@ -27,7 +27,7 @@ namespace Proect
 
             timeLeft = TimeSpan.FromMinutes(25);
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
-
+            
             timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += Timer_Tick;
@@ -70,9 +70,20 @@ namespace Proect
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
 
-        private void SetShortBreakTime()
+        private void ShortBreakBtn_Click(object sender, RoutedEventArgs e)
         {
+            timer.Stop();
+
             timeLeft = TimeSpan.FromMinutes(5);
+
+            TimerText.Text = timeLeft.ToString(@"mm\:ss");
+        }
+        private void LongBreakBtn_Click(object sender, RoutedEventArgs e)
+        {
+            timer.Stop();
+
+            timeLeft = TimeSpan.FromMinutes(15);
+
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
     }
