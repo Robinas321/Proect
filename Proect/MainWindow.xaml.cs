@@ -17,9 +17,12 @@ namespace Proect
     {
         private DispatcherTimer timer;
         private TimeSpan timeLeft;
+        private enum TimerMode { Work, ShortBreak, LongBreak }
+        private TimerMode _currentMode = TimerMode.Work;
 
         public MainWindow()
         {
+
             InitializeComponent();
 
             timeLeft = TimeSpan.FromMinutes(25);
@@ -58,6 +61,18 @@ namespace Proect
         {
             timer.Stop();
             timeLeft = TimeSpan.FromMinutes(25);
+            TimerText.Text = timeLeft.ToString(@"mm\:ss");
+        }
+
+        private void SetWorkTime()
+        {
+            timeLeft = TimeSpan.FromMinutes(25);
+            TimerText.Text = timeLeft.ToString(@"mm\:ss");
+        }
+
+        private void SetShortBreakTime()
+        {
+            timeLeft = TimeSpan.FromMinutes(5);
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
     }
