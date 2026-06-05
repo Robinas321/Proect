@@ -1,39 +1,36 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Threading;
-using System.Text.Json;
+﻿using System;
 using System.IO;
+using System.Text.Json;
+using System.Windows;
+using System.Windows.Threading;
+
 namespace Proect
 {
-
     public partial class MainWindow : Window
     {
         private DispatcherTimer timer;
         private TimeSpan timeLeft;
-        private enum TimerMode { Work, ShortBreak, LongBreak }
-        private TimerMode _currentMode = TimerMode.Work;
-         
+        private enum TimerMode{Work,ShortBreak,LongBreak}
 
-        int completedPomodoros = 0;
+        private TimerMode currentMode = TimerMode.Work;
+        private int completedPomodoros = 0;
+        private SettingsModel settings;
+
         public MainWindow()
         {
-
             InitializeComponent();
-            int pomodoroMinutes = int.Parse(PomodoroBox.Text);
-            int shortBreakMinutes = int.Parse(ShortBreakBox.Text);
-            int longBreakMinutes = int.Parse(LongBreakBox.Text);
-            int cycles = int.Parse(CyclesBox.Text);
-            timeLeft = TimeSpan.FromMinutes(25);
+
+            settings = SettingsModel.Load();
+
+            PomodoroBox.Text = settings.PomodoroMinutes.ToString();
+            ShortBreakBox.Text = settings.ShortBreakMinutes.ToString();
+            LongBreakBox.Text = settings.LongBreakMinutes.ToString();
+            CyclesBox.Text = settings.Cycles.ToString();
+            timeLeft = TimeSpan.FromMinutes(settings.PomodoroMinutes);
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
-            
+
+            CompletedText.Text = $"Завершено: {completedPomodoros}";
+
             timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += Timer_Tick;
@@ -43,46 +40,47 @@ namespace Proect
         {
             if (timeLeft.TotalSeconds > 0)
             {
-                timeLeft = timeLeft.Subtract(TimeSpan.FromSeconds(1));
+                timeLeft -= TimeSpan.FromSeconds(1);
                 TimerText.Text = timeLeft.ToString(@"mm\:ss");
+                return;
             }
-            else
-            {
-                timer.Stop();
-                MessageBox.Show("Pomodoro завершено!");
-            }
-            if (timeLeft == TimeSpan.Zero)
-            {
-                timer.Stop();
 
-                if (_currentMode == TimerMode.Work)
+            timer.Stop();
+
+            if (currentMode == TimerMode.Work)
+            {
+                completedPomodoros++;
+                CompletedText.Text = $"Завершено: {completedPomodoros}";
+
+                if (completedPomodoros % settings.Cycles == 0)
                 {
-                    completedPomodoros++;
+                    currentMode = TimerMode.LongBreak;
+                    timeLeft = TimeSpan.FromMinutes(settings.LongBreakMinutes);
 
-                    if (completedPomodoros % 4 == 0)
-                    {
-                        _currentMode = TimerMode.LongBreak;
-                        timeLeft = TimeSpan.FromMinutes(15);
-                    }
-                    else
-                    {
-                        _currentMode = TimerMode.ShortBreak;
-                        timeLeft = TimeSpan.FromMinutes(5);
-                    }
+                    MessageBox.Show("Час для довгої перерви!");
                 }
                 else
                 {
-                    _currentMode = TimerMode.Work;
-                    timeLeft = TimeSpan.FromMinutes(25);
-                }
+                    currentMode = TimerMode.ShortBreak;
+                    timeLeft = TimeSpan.FromMinutes(settings.ShortBreakMinutes);
 
-                TimerText.Text = timeLeft.ToString(@"mm\:ss");
+                    MessageBox.Show("Час для короткої перерви!");
+                }
+            }
+            else
+            {
+                currentMode = TimerMode.Work;
+                timeLeft = TimeSpan.FromMinutes(settings.PomodoroMinutes);
+
+                MessageBox.Show("Повертаємося до роботи!");
             }
 
+            TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
 
         private void Start_Click(object sender, RoutedEventArgs e)
         {
+            SaveSettings();
             timer.Start();
         }
 
@@ -94,13 +92,12 @@ namespace Proect
         private void Reset_Click(object sender, RoutedEventArgs e)
         {
             timer.Stop();
-            timeLeft = TimeSpan.FromMinutes(25);
-            TimerText.Text = timeLeft.ToString(@"mm\:ss");
-        }
 
-        private void SetWorkTime()
-        {
-            timeLeft = TimeSpan.FromMinutes(25);
+            SaveSettings();
+
+            currentMode = TimerMode.Work;
+            timeLeft = TimeSpan.FromMinutes(settings.PomodoroMinutes);
+
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
 
@@ -108,41 +105,73 @@ namespace Proect
         {
             timer.Stop();
 
-            timeLeft = TimeSpan.FromMinutes(5);
-
+            SaveSettings();
+            currentMode = TimerMode.ShortBreak;
+            timeLeft = TimeSpan.FromMinutes(settings.ShortBreakMinutes);
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
+
         private void LongBreakBtn_Click(object sender, RoutedEventArgs e)
         {
             timer.Stop();
 
-            timeLeft = TimeSpan.FromMinutes(15);
-
+            SaveSettings();
+            currentMode = TimerMode.LongBreak;
+            timeLeft = TimeSpan.FromMinutes(settings.LongBreakMinutes);
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
-        public class SettingsModel
+
+        private void SaveSettings()
         {
-            public int PomodoroMinutes { get; set; } = 25;
-            public int ShortBreakMinutes { get; set; } = 5;
-            public int LongBreakMinutes { get; set; } = 15;
-            public int Cycles { get; set; } = 4;
+            if (int.TryParse(PomodoroBox.Text, out int pomodoro))
+                settings.PomodoroMinutes = pomodoro;
 
-            public static string FileName = "settings.json";
+            if (int.TryParse(ShortBreakBox.Text, out int shortBreak))
+                settings.ShortBreakMinutes = shortBreak;
 
-            public void Save()
+            if (int.TryParse(LongBreakBox.Text, out int longBreak))
+                settings.LongBreakMinutes = longBreak;
+
+            if (int.TryParse(CyclesBox.Text, out int cycles))
+                settings.Cycles = cycles;
+
+            settings.Save();
+        }
+    }
+
+    public class SettingsModel
+    {
+        public int PomodoroMinutes { get; set; } = 25;
+        public int ShortBreakMinutes { get; set; } = 5;
+        public int LongBreakMinutes { get; set; } = 15;
+        public int Cycles { get; set; } = 4;
+
+        private static readonly string FileName = "settings.json";
+
+        public void Save()
+        {
+            string json = JsonSerializer.Serialize(this, new JsonSerializerOptions
             {
-                string json = JsonSerializer.Serialize(this);
-                File.WriteAllText(FileName, json);
-            }
+                WriteIndented = true
+            });
 
-            public static SettingsModel Load()
+            File.WriteAllText(FileName, json);
+        }
+
+        public static SettingsModel Load()
+        {
+            if (!File.Exists(FileName))
+                return new SettingsModel();
+
+            try
             {
-                if (!File.Exists(FileName))
-                    return new SettingsModel();
-
                 string json = File.ReadAllText(FileName);
-
-                return JsonSerializer.Deserialize<SettingsModel>(json);
+                return JsonSerializer.Deserialize<SettingsModel>(json)
+                       ?? new SettingsModel();
+            }
+            catch
+            {
+                return new SettingsModel();
             }
         }
     }

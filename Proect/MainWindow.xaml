@@ -80,9 +80,11 @@
                            FontSize="16"/>
 
                 <ListBox x:Name="HistoryList"/>
-
+                
+                <DataGrid x:Name="StatisticsGrid"/>
+                <lvc:CartesianChartx:Name="ProductivityChart"/>
             </StackPanel>
-
+           
         </GroupBox>
 
     </Grid>
