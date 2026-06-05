@@ -8,15 +8,57 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Proect
 {
 
     public partial class MainWindow : Window
     {
+        private DispatcherTimer timer;
+        private TimeSpan timeLeft;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            timeLeft = TimeSpan.FromMinutes(25);
+            TimerText.Text = timeLeft.ToString(@"mm\:ss");
+
+            timer = new DispatcherTimer();
+            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Tick += Timer_Tick;
+        }
+
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            if (timeLeft.TotalSeconds > 0)
+            {
+                timeLeft = timeLeft.Subtract(TimeSpan.FromSeconds(1));
+                TimerText.Text = timeLeft.ToString(@"mm\:ss");
+            }
+            else
+            {
+                timer.Stop();
+                MessageBox.Show("Pomodoro завершено!");
+            }
+        }
+
+        private void Start_Click(object sender, RoutedEventArgs e)
+        {
+            timer.Start();
+        }
+
+        private void Pause_Click(object sender, RoutedEventArgs e)
+        {
+            timer.Stop();
+        }
+
+        private void Reset_Click(object sender, RoutedEventArgs e)
+        {
+            timer.Stop();
+            timeLeft = TimeSpan.FromMinutes(25);
+            TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
     }
 }

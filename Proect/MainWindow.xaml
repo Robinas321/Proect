@@ -5,8 +5,85 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Proect"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="MainWindow" Height="500" Width="500">
+    <Grid Margin="10">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+
+            <TextBlock Text="Pomodoro (хв)"/>
+            <TextBox x:Name="PomodoroBox"
+                     Text="25"/>
+
+            <TextBlock Text="Коротка перерва (хв)"/>
+            <TextBox x:Name="ShortBreakBox"
+                     Text="5"/>
+
+            <TextBlock Text="Довга перерва (хв)"/>
+            <TextBox x:Name="LongBreakBox"
+                     Text="15"/>
+
+            <TextBlock Text="Циклів до довгої перерви"/>
+            <TextBox x:Name="CyclesBox"
+                     Text="4"/>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Margin="0,20,0,20">
+
+            <TextBlock x:Name="TimerText"
+                       Text="25:00"
+                       FontSize="40"
+                       HorizontalAlignment="Center"/>
+
+            <TextBlock x:Name="ModeText"
+                       Text="Pomodoro"
+                       FontSize="20"
+                       HorizontalAlignment="Center"/>
+
+            <WrapPanel HorizontalAlignment="Center">
+
+                <Button Content="Старт"
+                        Width="100"
+                        Margin="5"
+                        Click="Start_Click"/>
+
+                <Button Content="Пауза"
+                        Width="100"
+                        Margin="5"
+                        Click="Pause_Click"/>
+
+                <Button Content="Скинути"
+                        Width="100"
+                        Margin="5"
+                        Click="Reset_Click"/>
+
+            </WrapPanel>
+
+        </StackPanel>
+
+        <GroupBox Grid.Row="2"
+                  Header="Статистика">
+
+            <StackPanel>
+
+                <TextBlock x:Name="CompletedText"
+                           FontSize="16"/>
+
+                <TextBlock x:Name="BestDayText"
+                           FontSize="16"/>
+
+                <ListBox x:Name="HistoryList"/>
+
+            </StackPanel>
+
+        </GroupBox>
 
     </Grid>
 </Window>
