@@ -1,16 +1,17 @@
 ﻿using System;
 using System.IO;
+using System.Media;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
-
 namespace Proect
 {
     public partial class MainWindow : Window
     {
         private DispatcherTimer timer;
         private TimeSpan timeLeft;
-        private enum TimerMode{Work,ShortBreak,LongBreak}
+        private enum TimerMode { Work, ShortBreak, LongBreak }
 
         private TimerMode currentMode = TimerMode.Work;
         private int completedPomodoros = 0;
@@ -50,29 +51,49 @@ namespace Proect
             if (currentMode == TimerMode.Work)
             {
                 completedPomodoros++;
+
+
+                SystemSounds.Exclamation.Play();
                 CompletedText.Text = $"Завершено: {completedPomodoros}";
+
 
                 if (completedPomodoros % settings.Cycles == 0)
                 {
                     currentMode = TimerMode.LongBreak;
                     timeLeft = TimeSpan.FromMinutes(settings.LongBreakMinutes);
+                    SystemSounds.Exclamation.Play();
+                    MessageBox.Show("Час для довгої перерви!", "",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information,
+                        MessageBoxResult.OK,
+                        MessageBoxOptions.ServiceNotification
+                    );
 
-                    MessageBox.Show("Час для довгої перерви!");
                 }
                 else
                 {
                     currentMode = TimerMode.ShortBreak;
                     timeLeft = TimeSpan.FromMinutes(settings.ShortBreakMinutes);
+                    MessageBox.Show("Час для короткої перерви!", "",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information,
+                        MessageBoxResult.OK,
+                        MessageBoxOptions.ServiceNotification
+                    );
 
-                    MessageBox.Show("Час для короткої перерви!");
                 }
             }
             else
             {
                 currentMode = TimerMode.Work;
                 timeLeft = TimeSpan.FromMinutes(settings.PomodoroMinutes);
+                MessageBox.Show("Повертаємося до роботи!", "",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information,
+                        MessageBoxResult.OK,
+                        MessageBoxOptions.ServiceNotification
+                    );
 
-                MessageBox.Show("Повертаємося до роботи!");
             }
 
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
@@ -137,42 +158,7 @@ namespace Proect
 
             settings.Save();
         }
-    }
 
-    public class SettingsModel
-    {
-        public int PomodoroMinutes { get; set; } = 25;
-        public int ShortBreakMinutes { get; set; } = 5;
-        public int LongBreakMinutes { get; set; } = 15;
-        public int Cycles { get; set; } = 4;
-
-        private static readonly string FileName = "settings.json";
-
-        public void Save()
-        {
-            string json = JsonSerializer.Serialize(this, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
-
-            File.WriteAllText(FileName, json);
-        }
-
-        public static SettingsModel Load()
-        {
-            if (!File.Exists(FileName))
-                return new SettingsModel();
-
-            try
-            {
-                string json = File.ReadAllText(FileName);
-                return JsonSerializer.Deserialize<SettingsModel>(json)
-                       ?? new SettingsModel();
-            }
-            catch
-            {
-                return new SettingsModel();
-            }
-        }
+        
     }
 }
