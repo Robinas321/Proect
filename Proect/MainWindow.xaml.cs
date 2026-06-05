@@ -19,7 +19,9 @@ namespace Proect
         private TimeSpan timeLeft;
         private enum TimerMode { Work, ShortBreak, LongBreak }
         private TimerMode _currentMode = TimerMode.Work;
+       
 
+        int completedPomodoros = 0;
         public MainWindow()
         {
 
@@ -45,6 +47,34 @@ namespace Proect
                 timer.Stop();
                 MessageBox.Show("Pomodoro завершено!");
             }
+            if (timeLeft == TimeSpan.Zero)
+            {
+                timer.Stop();
+
+                if (_currentMode == TimerMode.Work)
+                {
+                    completedPomodoros++;
+
+                    if (completedPomodoros % 4 == 0)
+                    {
+                        _currentMode = TimerMode.LongBreak;
+                        timeLeft = TimeSpan.FromMinutes(15);
+                    }
+                    else
+                    {
+                        _currentMode = TimerMode.ShortBreak;
+                        timeLeft = TimeSpan.FromMinutes(5);
+                    }
+                }
+                else
+                {
+                    _currentMode = TimerMode.Work;
+                    timeLeft = TimeSpan.FromMinutes(25);
+                }
+
+                TimerText.Text = timeLeft.ToString(@"mm\:ss");
+            }
+
         }
 
         private void Start_Click(object sender, RoutedEventArgs e)
@@ -86,5 +116,6 @@ namespace Proect
 
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
+
     }
 }
