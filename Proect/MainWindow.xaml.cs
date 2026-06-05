@@ -9,7 +9,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
-
+using System.Text.Json;
+using System.IO;
 namespace Proect
 {
 
@@ -19,14 +20,17 @@ namespace Proect
         private TimeSpan timeLeft;
         private enum TimerMode { Work, ShortBreak, LongBreak }
         private TimerMode _currentMode = TimerMode.Work;
-       
+         
 
         int completedPomodoros = 0;
         public MainWindow()
         {
 
             InitializeComponent();
-
+            int pomodoroMinutes = int.Parse(PomodoroBox.Text);
+            int shortBreakMinutes = int.Parse(ShortBreakBox.Text);
+            int longBreakMinutes = int.Parse(LongBreakBox.Text);
+            int cycles = int.Parse(CyclesBox.Text);
             timeLeft = TimeSpan.FromMinutes(25);
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
             
@@ -116,6 +120,30 @@ namespace Proect
 
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
+        public class SettingsModel
+        {
+            public int PomodoroMinutes { get; set; } = 25;
+            public int ShortBreakMinutes { get; set; } = 5;
+            public int LongBreakMinutes { get; set; } = 15;
+            public int Cycles { get; set; } = 4;
 
+            public static string FileName = "settings.json";
+
+            public void Save()
+            {
+                string json = JsonSerializer.Serialize(this);
+                File.WriteAllText(FileName, json);
+            }
+
+            public static SettingsModel Load()
+            {
+                if (!File.Exists(FileName))
+                    return new SettingsModel();
+
+                string json = File.ReadAllText(FileName);
+
+                return JsonSerializer.Deserialize<SettingsModel>(json);
+            }
+        }
     }
 }
