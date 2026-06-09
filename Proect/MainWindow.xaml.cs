@@ -4,6 +4,7 @@ using System.Media;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Media;
+using System.Collections.Generic;
 using System.Windows.Threading;
 namespace Proect
 {
@@ -16,13 +17,51 @@ namespace Proect
         private TimerMode currentMode = TimerMode.Work;
         private int completedPomodoros = 0;
         private SettingsModel settings;
+        private StatisticsModel statistics;
+       public class StatisticsModel
+        {
+            public Dictionary<string, int> DailyPomodoros { get; set; }
+                = new Dictionary<string, int>();
 
+            public void AddPomodoro()
+            {
+                string today = DateTime.Now.ToString("yyyy-MM-dd");
+
+                if (!DailyPomodoros.ContainsKey(today))
+                    DailyPomodoros[today] = 0;
+
+                DailyPomodoros[today]++;
+            }
+
+            public static StatisticsModel Load()
+            {
+                if (!File.Exists("statistics.json"))
+                    return new StatisticsModel();
+
+                return JsonSerializer.Deserialize<StatisticsModel>(
+                    File.ReadAllText("statistics.json"))
+                    ?? new StatisticsModel();
+            }
+
+            public void Save()
+            {
+                File.WriteAllText(
+                    "statistics.json",
+                    JsonSerializer.Serialize(this,
+                    new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    }));
+            }
+        }
         public MainWindow()
         {
             InitializeComponent();
 
             settings = SettingsModel.Load();
+            statistics = StatisticsModel.Load();
 
+            UpdateStatistics();
             PomodoroBox.Text = settings.PomodoroMinutes.ToString();
             ShortBreakBox.Text = settings.ShortBreakMinutes.ToString();
             LongBreakBox.Text = settings.LongBreakMinutes.ToString();
@@ -51,7 +90,10 @@ namespace Proect
             if (currentMode == TimerMode.Work)
             {
                 completedPomodoros++;
+                statistics.AddPomodoro();
+                statistics.Save();
 
+                UpdateStatistics();
 
                 SystemSounds.Exclamation.Play();
                 CompletedText.Text = $"Завершено: {completedPomodoros}";
@@ -142,6 +184,35 @@ namespace Proect
             TimerText.Text = timeLeft.ToString(@"mm\:ss");
         }
 
+        public class SettingsModel
+        {
+            public int PomodoroMinutes { get; set; } = 25;
+            public int ShortBreakMinutes { get; set; } = 5;
+            public int LongBreakMinutes { get; set; } = 15;
+            public int Cycles { get; set; } = 4;
+
+            public static SettingsModel Load()
+            {
+                if (!File.Exists("settings.json"))
+                    return new SettingsModel();
+
+                return JsonSerializer.Deserialize<SettingsModel>(
+                    File.ReadAllText("settings.json"))
+                    ?? new SettingsModel();
+            }
+
+            public void Save()
+            {
+                File.WriteAllText(
+                    "settings.json",
+                    JsonSerializer.Serialize(this,
+                    new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    }));
+            }
+        }
+
         private void SaveSettings()
         {
             if (int.TryParse(PomodoroBox.Text, out int pomodoro))
@@ -158,7 +229,35 @@ namespace Proect
 
             settings.Save();
         }
-
         
+        private void UpdateStatistics()
+        {
+            HistoryList.Items.Clear();
+
+            int best = 0;
+            string bestDay = "-";
+
+            foreach (var day in statistics.DailyPomodoros)
+            {
+                HistoryList.Items.Add(
+                    $"{day.Key} - {day.Value} помідорів");
+
+                if (day.Value > best)
+                {
+                    best = day.Value;
+                    bestDay = day.Key;
+                }
+            }
+
+            BestDayText.Text = $"Найкращий день: {bestDay} ({best})";
+        }
+        private void Statistics_Click(object sender, RoutedEventArgs e)
+        {
+            StatisticsWindow window =
+                new StatisticsWindow(statistics);
+
+            window.ShowDialog();
+        }
+
     }
 }

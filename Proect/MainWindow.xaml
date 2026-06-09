@@ -63,29 +63,42 @@
                         Width="100"
                         Margin="5"
                         Click="Reset_Click"/>
+                
 
             </WrapPanel>
+             
 
         </StackPanel>
 
-        <GroupBox Grid.Row="2"
-                  Header="Статистика">
-
-            <StackPanel>
+        <GroupBox Grid.Row="2" Header="Статистика">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
                 <TextBlock x:Name="CompletedText"
-                           FontSize="16"/>
+                   Grid.Row="0"
+                   FontSize="16"/>
 
                 <TextBlock x:Name="BestDayText"
-                           FontSize="16"/>
+                   Grid.Row="1"
+                   FontSize="16"/>
 
-                <ListBox x:Name="HistoryList"/>
-                
-            
-               
-            </StackPanel>
-           
+                <ListBox x:Name="HistoryList"
+                 Grid.Row="2"/>
+
+                <Button Content="Статистика"
+                Grid.Row="3"
+                Width="100"
+                Margin="5"
+                Click="Statistics_Click"/>
+            </Grid>
         </GroupBox>
 
     </Grid>
+    
 </Window>
+
